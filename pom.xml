@@ -43,7 +43,9 @@
             <artifactId>spring-cloud-starter-consul-config</artifactId>
         </dependency>
         <!-- For circuit bbreaker use this . https://github.com/resilience4j/resilience4j-spring-boot2-demo
-        Read about it here https://github.com/resilience4j/resilience4j -->
+        Read about it here https://github.com/resilience4j/resilience4j 
+         - For Testing blocking calls use blockHound
+         -->
         <dependency>
             <groupId>io.projectreactor</groupId>
             <artifactId>reactor-test</artifactId>
