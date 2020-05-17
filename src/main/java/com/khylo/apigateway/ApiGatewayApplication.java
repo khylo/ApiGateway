@@ -146,22 +146,26 @@ public class ApiGatewayApplication {
                 // Github 3  http://localhost:8081/khylo goes straight to http://github.com/khylo with 302 to https
                 .route(p -> p.path("/khylo").uri("http://github.com/"))
                 // Lookup.. Using PredicateFactory.. Doesn't seem to be able to map urls
-                .route(p -> p.path("/look/**").uri("na://no-op").predicate(slrpf.apply(predicateConfig)))
+                //.route(p -> p.path("/look/**").uri("na://no-op").predicate(slrpf.apply(predicateConfig)))
 
-                // Using custom filter
-                .route(p-> p.path("/fil/**").filters(f-> f.filter(new ServiceLookupFilter(customerService))).uri("no://op").filter(new ServiceLookupFilter(customerService)))
+                // Using custom filter /fil/B/* -> Google  /fil/B/* -> Amazon
+                .route(p-> p.path("/fil/**").filters(f-> f.filter(new ServiceLookupFilter(customerService))).uri("no://op"))
 
                 // Load Balanced proxy (using service discovery in this case consul)
-                .route(p -> p.path("lb").uri("lb://customer-service/customers"))
+                .route(p -> p.path("/lb/**").uri("lb://customer-service/customers"))
                 //Add custom header
-                .route(p ->p.path("h").filters(f->f.addRequestHeader("ApiGateway", "CustomeHeader")).uri("lb://customer-service/customers"))
+                .route(p ->p.path("/h").filters(f->f.addRequestHeader("ApiGateway", "CustomeHeader")).uri("lb://customer-service/customers"))
                 //Custom filter 1. Set sytatus  and content-type
-                .route(p ->p.path("cf1").filters(f->f.setStatus(HttpStatus.BANDWIDTH_LIMIT_EXCEEDED).setResponseHeader("content-type",MediaType.IMAGE_GIF.toString())).uri("lb://customer-service/customers"))
+                .route(p ->p.path("/cf1").filters(f->f.setStatus(HttpStatus.BANDWIDTH_LIMIT_EXCEEDED).setResponseHeader("content-type",MediaType.IMAGE_GIF.toString())).uri("lb://customer-service/customers"))
                 // Custom filter 2. Re-write url with customer Id taken form original
-                .route(p-> p.path("cf2").filters(f ->f.rewritePath("/cf2/(?<CID>).*", "/customers/${CID}")).uri("lb://customer-service"))
+                .route(p-> p.path("/cf2").filters(f ->f.rewritePath("/cf2/(?<CID>).*", "/customers/${CID}")).uri("lb://customer-service"))
                 // Custom filter 2. Re-write url with customer Id taken form original
-                .route(p-> p.path("cf3").filters(f ->f.stripPrefix(1)).uri("lb://customer-service"))
-                //Circuit Breaker (using resilieance 4j
+                .route(p-> p.path("/cf3").filters(f ->f.stripPrefix(1)).uri("lb://customer-service/customers"))
+                // Hystrix old.. resilience 4j recommended now.. uses hystrix.command.default.execution.isolation.thread.timeoutInMilliseconds=3000
+                .route(p->p.path("/hy").filters(f->f.hystrix(config -> config.setName("myconfig"))).uri("http://github.com"))
+                .route(p->p.path("/hy2").filters(f->f.hystrix(config -> config.setName("myconfig"))).uri("lb://customer-service/customers"))
+                //Circuit Breaker (using resilieance 4j https://github.com/resilience4j/resilience4j)
+                //.route(p-> p.path("/cb").filters(f -> f.circuitBreaker()
                 .build();
     }
 

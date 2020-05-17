@@ -20,7 +20,7 @@ import java.util.function.Predicate;
 @Service
 @Slf4j
 public class CustomerService {
-    public final static String LookupUrl = "/look";
+    public final static String LookupUrl = "/fil";
 
     AntPathMatcher pathMatcher = new AntPathMatcher();
     String format = LookupUrl+"/{customer}/{otherParam}";

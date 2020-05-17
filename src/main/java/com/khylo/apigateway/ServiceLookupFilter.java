@@ -18,7 +18,7 @@ public class ServiceLookupFilter implements GatewayFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return 10001;
+        return RouteToRequestUrlFilter.ROUTE_TO_URL_FILTER_ORDER + 1;
     }
 
     CustomerService customerService;
@@ -32,12 +32,16 @@ public class ServiceLookupFilter implements GatewayFilter, Ordered {
         String path  = exchange.getRequest().getPath().value();
         Optional<String> newPath = customerService.convertPath(path);
         newPath.ifPresent(target -> {
+            log.info("filtering "+path+". New Path = "+newPath.get());
             try {
-                exchange.getAttributes().put(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR, new URI("http://www.google.com"));
-                exchange.getAttributes().put(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR, new URI("http://www.google.com/maps"));
-                log.info("Reset url = "+ RouteToRequestUrlFilter.ROUTE_TO_URL_FILTER_ORDER);
+                if(path.contains("A")){
+                    exchange.getAttributes().put(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR, new URI("http://www.google.com"));
+                    //exchange.getAttributes().put(ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR, new URI("http://www.google.com/maps"));
+                }else{
+                    exchange.getAttributes().put(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR, new URI("http://www.amazon.com"));
+                }
             } catch (URISyntaxException e) {
-                log.error("Invalid target URI ",e);
+                log.error("Invalid target URI ", e);
             }
         });
         return chain.filter(exchange);
